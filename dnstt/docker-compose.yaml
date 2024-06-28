@@ -10,7 +10,7 @@ services:
   dns-tunnel-server:
     image: dnstt
     pull_policy: never
-    restart: always
+    restart: unless-stopped
     command: dnstt-server -udp :53 -privkey-file server.key t.example.com 172.22.0.6:1080
     stop_grace_period: 1s
     networks:
@@ -22,7 +22,7 @@ services:
   dns-tunnel-client:
     image: dnstt
     pull_policy: never
-    restart: always
+    restart: unless-stopped
     command: dnstt-client -udp 172.22.0.2:53 -pubkey-file server.pub t.example.com 0.0.0.0:8000
     depends_on:
       - dns-tunnel-server

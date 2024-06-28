@@ -10,7 +10,7 @@ services:
   dns-tunnel-server:
     image: ozymandns
     pull_policy: never
-    restart: always
+    restart: unless-stopped
     command: ./nomde.pl -i 0.0.0.0 a.org -L sshdns:172.22.0.6:1080
     stop_grace_period: 1s
     networks:
@@ -22,7 +22,7 @@ services:
   dns-tunnel-client:
     image: ozymandns
     pull_policy: never
-    restart: always
+    restart: unless-stopped
     command: socat TCP-LISTEN:8000,fork EXEC:"./droute.pl -r 172.22.0.2 sshdns.a.org"
     depends_on:
       - dns-tunnel-server
