@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 
 RUN apt update && apt upgrade -y
 
-RUN apt-get install -y libwww-perl libclone-perl libnet-dns-perl libmime-base32-perl libdigest-crc-perl socat
+RUN apt install -y libwww-perl libclone-perl libnet-dns-perl libmime-base32-perl libdigest-crc-perl socat
 
 ENV PERL5LIB=/usr/share/perl5/
 
