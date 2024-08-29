@@ -22,7 +22,7 @@ services:
     image: dns2tcp
     pull_policy: never
     restart: unless-stopped
-    command: sh -c "dns2tcpc -r socks -l 1080 -k key -z dns2tcp.hsc.fr 172.22.0.2 | (sleep 2 && socat tcp-listen:8000,fork tcp:127.0.0.1:1080)"
+    command: sh -c "dns2tcpc -r socks -l 1080 -k key -z dns2tcp.hsc.fr 172.22.0.2 & (sleep 2 && socat tcp-listen:8000,fork tcp:127.0.0.1:1080)"
     depends_on:
       - dns-tunnel-server
     networks:
