@@ -1,3 +1,6 @@
 [submodule "TUNS/tuns"]
 	path = TUNS/tuns
 	url = git@github.com:lnussbaum/tuns.git
+[submodule "dockerveth"]
+	path = dockerveth
+	url = git@github.com:micahculpepper/dockerveth.git
