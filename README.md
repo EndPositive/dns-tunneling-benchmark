@@ -7,7 +7,7 @@ First, you need to know the virtual interface name of the container.
 We can use the following script to retrieve this.
 
 ```bash
-sudo sh dockerveth/dockerveth.sh
+sudo sh tools/dockerveth/dockerveth.sh
 CONTAINER ID    VETH            NAMES
 65a34b856518    veth349fc67     tuns-dns-tunnel-client-1
 12913dbbdce6    veth7fe455a     tuns-socks-client-1
