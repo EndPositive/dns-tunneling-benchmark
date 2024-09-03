@@ -1,0 +1,21 @@
+FROM alpine:3.17 AS download
+
+WORKDIR /usr/src/app
+
+RUN apk add wget
+
+RUN wget https://downloads.skullsecurity.org/dnscat2/dnscat2-v0.07-client-x64.tar.bz2 && \
+    tar -xvf dnscat2-v0.07-client-x64.tar.bz2
+
+FROM debian:bookworm-slim
+
+WORKDIR /usr/src/app
+
+RUN apt update && apt upgrade -y
+
+# TODO: check neccessary?
+RUN apt install -y socat net-tools
+
+COPY --from=download /usr/src/app/dnscat /usr/src/app/
+
+ENTRYPOINT ["/usr/src/app/dnscat"]

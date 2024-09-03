@@ -1,0 +1,32 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+
+# Check if the correct number of arguments is passed
+if {[llength $argv] != 1} {
+    puts "Usage: $argv0 <IP>"
+    exit 1
+}
+
+# Get the IP address from the arguments
+set ip [lindex $argv 0]
+
+# Start the binary with arguments
+spawn ruby ./dnscat2.rb test.com
+
+# Wait for the "Encrypted session established!" text
+expect "New window created: 1"
+
+# Send the "window -i 1" command
+send "window -i 1\r"
+
+# Wait for the command prompt
+expect "For a full list of clients, try 'help'."
+
+# Send the "listen :8000 <IP>:1080" command using the provided IP
+send "listen :8000 $ip:1080\r"
+
+expect "Listening on :8000, sending connections to $ip:1080\r"
+
+# Wait for the process to finish
+expect eof

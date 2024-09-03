@@ -1,0 +1,24 @@
+FROM alpine:3.17 AS download
+
+WORKDIR /usr/src/app
+
+RUN apk add wget unzip
+
+RUN wget https://downloads.skullsecurity.org/dnscat2/dnscat2-v0.07-server.zip && \
+    unzip -P password dnscat2-v0.07-server.zip
+
+FROM ruby:2.7.8-slim-bullseye
+
+WORKDIR /usr/src/app
+
+RUN apt update && apt upgrade -y
+
+RUN apt install -y build-essential expect
+
+COPY --from=download /usr/src/app/dnscat2_server/ /usr/src/app/
+
+RUN bundler install
+
+COPY dnscat2.exp .
+
+ENTRYPOINT ["expect","/usr/src/app/dnscat2.exp"]
