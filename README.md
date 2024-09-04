@@ -1,5 +1,21 @@
 # DNS Tunneling Benchmark Docker
 
+## Ansible Playbook
+
+You can run the experiment for each tool using the Ansible playbook.
+First install the Ansible Docker module.
+
+```shell
+ansible-galaxy collection install community.docker
+```
+
+Then you can run the experiment:
+
+```shell
+cd tunnels/dns2tcp
+ansible-playbook 
+```
+
 ### Network Simulation
 
 The created docker network can be emulated using the Linux netem module.

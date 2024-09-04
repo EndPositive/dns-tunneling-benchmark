@@ -4,3 +4,9 @@
 [submodule "dockerveth"]
 	path = tools/dockerveth
 	url = git@github.com:micahculpepper/dockerveth.git
+[submodule "tools/hev-socks5-server"]
+	path = tools/hev-socks5-server
+	url = git@github.com:heiher/hev-socks5-server.git
+[submodule "tools/hev-socks5-tunnel"]
+	path = tools/hev-socks5-tunnel
+	url = git@github.com:heiher/hev-socks5-tunnel.git

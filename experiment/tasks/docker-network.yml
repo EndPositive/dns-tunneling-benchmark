@@ -1,0 +1,8 @@
+---
+- name: Setup Docker Network
+  community.docker.docker_network:
+    name: experiment
+    driver: bridge
+    enable_ipv6: false
+    ipam_config:
+      - subnet: 172.22.0.0/16

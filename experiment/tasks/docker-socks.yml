@@ -1,0 +1,50 @@
+---
+
+- name: Build hev-socks5-server image
+  community.docker.docker_image_build:
+    name: heiher/hev-socks5-server
+    rebuild: always
+    path: ../../tools/hev-socks5-server
+    dockerfile: docker/Dockerfile
+
+- name: Build hev-socks5-client image
+  community.docker.docker_image_build:
+    name: heiher/hev-socks5-client
+    rebuild: always
+    path: ../../tools/hev-socks5-tunnel
+
+- name: Build iperf3-hev-socks5-tunnel image
+  community.docker.docker_image_build:
+    name: iperf3-hev-socks5-tunnel
+    rebuild: always
+    path: ../../tools/iperf3-hev-socks5-tunnel
+
+- name: Run socks-server
+  community.docker.docker_container:
+    name: socks-server
+    image: heiher/hev-socks5-server
+    restart_policy: unless-stopped
+    networks:
+      - name: experiment
+        ipv4_address: 172.22.0.6
+    exposed_ports:
+      - 1080/tcp
+
+- name: Run socks-client
+  community.docker.docker_container:
+    name: socks-client
+    image: iperf3-hev-socks5-tunnel
+    restart_policy: unless-stopped
+    capabilities:
+      - NET_ADMIN
+    devices:
+      - '/dev/net/tun:/dev/net/tun'
+    env:
+      SOCKS5_ADDR: "172.22.0.3"
+      SOCKS5_PORT: "8000"
+      SOCKS5_UDP_MODE: "tcp"
+      IPV4_EXCLUDED_ROUTES: "0.0.0.0/0"
+    networks:
+      - name: experiment
+        ipv4_address: 172.22.0.5
+    

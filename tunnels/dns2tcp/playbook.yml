@@ -1,0 +1,46 @@
+---
+- name: dns2tcp
+  hosts: localhost
+  collections:
+    - community.docker
+  
+  tasks:
+    - include_tasks: ../../experiment/tasks/docker-network.yml
+    
+    - include_tasks: ../../experiment/tasks/docker-socks.yml
+    
+    - include_tasks: ../../experiment/tasks/docker-iperf3.yml
+    
+    - name: Build dns2tcp image
+      community.docker.docker_image_build:
+        name: dns2tcp
+        rebuild: always
+        path: .
+ 
+    - name: Run dns-tunnel-server
+      community.docker.docker_container:
+        name: dns-tunnel-server
+        image: dns2tcp
+        restart_policy: unless-stopped
+        command: dns2tcpd -F -d 1 -f /usr/src/app/.dns2tcpdrc
+        networks:
+          - name: experiment
+            ipv4_address: 172.22.0.2
+        exposed_ports:
+          - 53/udp
+          - 53/tcp
+    
+    - name: Run dns-tunnel-client
+      community.docker.docker_container:
+        name: dns-tunnel-client
+        image: dns2tcp
+        restart_policy: unless-stopped
+        command: sh -c "dns2tcpc -r socks -l 1080 -k key -z dns2tcp.hsc.fr 172.22.0.2 | (sleep 2 && socat tcp-listen:8000,fork tcp:127.0.0.1:1080)"
+        networks:
+          - name: experiment
+            ipv4_address: 172.22.0.3
+        exposed_ports:
+          - 8000/udp
+          - 8000/tcp
+
+    - include_tasks: ../../experiment/tasks/docker-destroy.yml
