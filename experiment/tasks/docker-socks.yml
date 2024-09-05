@@ -25,7 +25,7 @@
     image: heiher/hev-socks5-server
     restart_policy: unless-stopped
     networks:
-      - name: experiment
+      - name: "{{ docker_network_name }}"
         ipv4_address: 172.22.0.6
     exposed_ports:
       - 1080/tcp
@@ -45,6 +45,6 @@
       SOCKS5_UDP_MODE: "tcp"
       IPV4_EXCLUDED_ROUTES: "0.0.0.0/0"
     networks:
-      - name: experiment
+      - name: "{{ docker_network_name }}"
         ipv4_address: 172.22.0.5
     

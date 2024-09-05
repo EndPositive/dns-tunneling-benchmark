@@ -1,0 +1,17 @@
+---
+- name: Build big-files image
+  community.docker.docker_image_build:
+    name: big-files
+    rebuild: always
+    path: ../../tools/big-files
+
+- name: Run big-files image
+  community.docker.docker_container:
+    name: big-files
+    image: big-files
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ docker_network_name }}"
+        ipv4_address: 172.22.0.7
+    exposed_ports:
+      - 8000/tcp

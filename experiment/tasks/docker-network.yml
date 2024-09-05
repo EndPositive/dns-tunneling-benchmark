@@ -1,7 +1,7 @@
 ---
 - name: Setup Docker Network
   community.docker.docker_network:
-    name: experiment
+    name: "{{ docker_network_name }}"
     driver: bridge
     enable_ipv6: false
     ipam_config:

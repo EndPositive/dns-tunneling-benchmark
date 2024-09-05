@@ -7,5 +7,5 @@
     healthcheck:
       test: null
     networks:
-      - name: experiment
+      - name: "{{ docker_network_name }}"
         ipv4_address: 172.22.0.4
