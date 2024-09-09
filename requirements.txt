@@ -1,0 +1,4 @@
+scapy[complete]==2.5.0
+dpkt==1.9.8
+python-on-whales==0.73.0
+tqdm==4.66.5

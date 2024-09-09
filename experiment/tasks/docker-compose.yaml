@@ -1,0 +1,95 @@
+services:
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    networks:
+      experiment:
+        ipv4_address: 172.22.0.8
+    ports:
+      - "8080:8080"
+  
+  big-files:
+    build:
+      context: ../../tools/big-files
+    container_name: big-files
+    image: big-files
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: 172.22.0.7
+    ports:
+      - "8000/tcp"
+    depends_on:
+      - cadvisor
+  
+  hev-socks5-server:
+    build:
+      context: ../../tools/hev-socks5-server
+      dockerfile: docker/Dockerfile
+    container_name: socks-server
+    image: heiher/hev-socks5-server
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: 172.22.0.6
+    ports:
+      - "1080/tcp"
+    depends_on:
+      - cadvisor
+  
+  hev-socks5-client:
+    build:
+      context: ../../tools/hev-socks5-tunnel
+    image: heiher/hev-socks5-client
+    restart: unless-stopped
+    profiles:
+      - client-build-only  # This service won't run by default but will be built
+  
+  iperf3-hev-socks5-tunnel:
+    build:
+      context: ../../tools/iperf3-hev-socks5-tunnel
+    container_name: socks-client
+    image: iperf3-hev-socks5-tunnel
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - '/dev/net/tun:/dev/net/tun'
+    environment:
+      SOCKS5_ADDR: "172.22.0.3"
+      SOCKS5_PORT: "8000"
+      SOCKS5_UDP_MODE: "tcp"
+      IPV4_EXCLUDED_ROUTES: "0.0.0.0/0"
+    networks:
+      experiment:
+        ipv4_address: 172.22.0.5
+    depends_on:
+      - dns-tunnel-client
+      - cadvisor
+
+  iperf3-server:
+    image: mlabbe/iperf3
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: 172.22.0.4
+    depends_on:
+      - cadvisor
+
+networks:
+  experiment:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
