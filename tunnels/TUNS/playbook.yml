@@ -18,18 +18,22 @@
         
         - include_tasks: ../../experiment/tasks/docker-big-files.yml
         
-        - name: Build dns2tcp image
+        - name: Build TUNS image
           community.docker.docker_image_build:
-            name: dns2tcp
+            name: tuns
             rebuild: always
             path: .
         
         - name: Run dns-tunnel-server
           community.docker.docker_container:
             name: dns-tunnel-server
-            image: dns2tcp
+            image: tuns
             restart_policy: unless-stopped
-            command: dns2tcpd -F -d 1 -f /usr/src/app/.dns2tcpdrc
+            command: sh -c "ruby tuns-server --debug -i 10.0.0.1 -t 10.0.0.2 -d test.com & (sleep 100 && socat tcp-listen:1080,fork,bind=10.0.0.1 tcp:172.22.0.6:1080)"
+            capabilities:
+              - NET_ADMIN
+            devices:
+              - '/dev/net/tun:/dev/net/tun'
             networks:
               - name: "{{ docker_network_name }}"
                 ipv4_address: 172.22.0.2
@@ -40,9 +44,13 @@
         - name: Run dns-tunnel-client
           community.docker.docker_container:
             name: dns-tunnel-client
-            image: dns2tcp
+            image: tuns
             restart_policy: unless-stopped
-            command: sh -c "dns2tcpc -r socks -l 1080 -k key -z dns2tcp.hsc.fr 172.22.0.2 | (sleep 2 && socat tcp-listen:8000,fork tcp:127.0.0.1:1080)"
+            command: sh -c "ruby tuns-client --debug -i 10.0.0.2 -t 10.0.0.1 -n 172.22.0.2 -d test.com & (sleep 1 && socat tcp-listen:8000,fork,bind=172.22.0.3 tcp:10.0.0.1:1080)"
+            capabilities:
+              - NET_ADMIN
+            devices:
+              - '/dev/net/tun:/dev/net/tun'
             networks:
               - name: "{{ docker_network_name }}"
                 ipv4_address: 172.22.0.3
