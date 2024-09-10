@@ -97,6 +97,10 @@ def dnstt():
 def iodine():
     return run_experiment("iodine")
 
+@app.command()
+def ozyman():
+    return run_experiment("OzymanDNS")
+
 @app.callback()
 def main(verbose: bool = False, destroy: bool = False):
     if verbose:

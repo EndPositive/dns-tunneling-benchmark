@@ -1,67 +1,37 @@
 services:
-  socks-server:
-    image: heiher/hev-socks5-server:latest
-    restart: unless-stopped
-    networks:
-      bridge:
-        ipv4_address: 172.22.0.6
-    expose:
-      - "1080/tcp"
   dns-tunnel-server:
+    build:
+      context: tunnels/OzymanDNS
+      dockerfile: Dockerfile
     image: ozymandns
-    pull_policy: never
-    restart: unless-stopped
+    container_name: dns-tunnel-server
     command: ./nomde.pl -i 0.0.0.0 a.org -L sshdns:172.22.0.6:1080
+    restart: unless-stopped
     stop_grace_period: 1s
     networks:
-      bridge:
+      experiment:
         ipv4_address: 172.22.0.2
-    expose:
+    ports:
       - "53/udp"
       - "53/tcp"
-  dns-tunnel-client:
-    image: ozymandns
-    pull_policy: never
-    restart: unless-stopped
-    command: socat TCP-LISTEN:8000,fork EXEC:"./droute.pl -r 172.22.0.2 sshdns.a.org"
     depends_on:
-      - dns-tunnel-server
+      - hev-socks5-server
+      - cadvisor
+
+  dns-tunnel-client:
+    build:
+      context: tunnels/OzymanDNS
+      dockerfile: Dockerfile
+    image: ozymandns
+    container_name: dns-tunnel-client
+    command: socat TCP-LISTEN:8000,fork EXEC:"./droute.pl -r 172.22.0.2 sshdns.a.org"
+    restart: unless-stopped
     networks:
-      bridge:
+      experiment:
         ipv4_address: 172.22.0.3
-    expose:
+    ports:
       - "8000/udp"
       - "8000/tcp"
-  iperf3-server:
-    image: mlabbe/iperf3
-    restart: unless-stopped
-    healthcheck:
-      disable: true
-    networks:
-      bridge:
-        ipv4_address: 172.22.0.4
-    expose:
-      - "5201/udp"
-      - "5201/tcp"
-  socks-client:
-    image: iperf3-hev-socks5-tunnel
-    restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - '/dev/net/tun:/dev/net/tun'
-    environment:
-      - SOCKS5_ADDR=172.22.0.3
-      - SOCKS5_PORT=8000
-      - SOCKS5_UDP_MODE=tcp
-      - IPV4_EXCLUDED_ROUTES=0.0.0.0/0
-    networks:
-      bridge:
-        ipv4_address: 172.22.0.5
-networks:
-  bridge:
-    driver: bridge
-    enable_ipv6: false
-    ipam:
-      config:
-        - subnet: 172.22.0.0/16
+    depends_on:
+      - dns-tunnel-server
+      - cadvisor
