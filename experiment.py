@@ -93,6 +93,10 @@ def dnscat2():
 def dnstt():
     return run_experiment("dnstt")
 
+@app.command()
+def iodine():
+    return run_experiment("iodine")
+
 @app.callback()
 def main(verbose: bool = False, destroy: bool = False):
     if verbose:
