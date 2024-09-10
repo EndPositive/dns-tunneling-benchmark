@@ -1,6 +1,0 @@
-
-- name: Stop tcpdump after other tasks are done
-  become: true
-  command: killall tcpdump
-  when: tcpdump_job is defined
-  
