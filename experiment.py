@@ -76,7 +76,8 @@ def run_experiment(tunnel_name: str):
         packets = a.stop()
 
         # Save captured packets
-        wrpcap("packets.pcap", packets)
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        wrpcap(f"packets-{tunnel_name}-{timestamp}.pcap", packets)
 
     except Exception as e:
         print(e)
