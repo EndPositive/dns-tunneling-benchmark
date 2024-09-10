@@ -1,12 +1,18 @@
-import sys
 import time
 from typing import Iterable, Tuple
 
+import typer
 from python_on_whales import DockerClient, Network
 from scapy.all import conf
 from scapy.sendrecv import AsyncSniffer
 from scapy.utils import wrpcap
 from tqdm import tqdm
+
+app = typer.Typer()
+state = {
+    "verbose": False,
+    "destroy": False,
+}
 
 conf.use_pcap = True
 
@@ -18,14 +24,17 @@ def countdown_timer(seconds):
     for _ in tqdm(range(seconds, 0, -1), desc="Countdown", unit="s"):
         time.sleep(1)
 
-def main():
+def run_experiment(tunnel_name: str):
     docker_client_network = DockerClient(
         compose_files=[
-            "../../experiment/tasks/docker-compose.yaml",
-            "./docker-compose.yaml"
-        ])
+            "docker-compose.yaml",
+            f"tunnels/{tunnel_name}/docker-compose.yaml"
+        ],
 
-    if len(sys.argv) > 1 and sys.argv[1] == "down":
+        # context=os.getcwd(),
+    )
+
+    if state["destroy"]:
         try:
             docker_client_network.compose.down(volumes=True)
         except KeyboardInterrupt:
@@ -42,7 +51,7 @@ def main():
         # Countdown timer before sniffing
         countdown_timer(10)
 
-        network = docker_client_network.network.inspect("tasks_experiment")
+        network = docker_client_network.network.inspect("benchmark_experiment")
 
         # Perform packet sniffing
         a = AsyncSniffer(iface=get_interface_name(network), count=0)
@@ -72,6 +81,20 @@ def main():
     except Exception as e:
         print(e)
 
+@app.command()
+def dns2tcp():
+    return run_experiment("dns2tcp")
+
+@app.command()
+def dnstt():
+    return run_experiment("dnstt")
+
+@app.callback()
+def main(verbose: bool = False, destroy: bool = False):
+    if verbose:
+        state["verbose"] = True
+    if destroy:
+        state["destroy"] = True
 
 if __name__ == "__main__":
-    main()
+    app()
