@@ -101,6 +101,10 @@ def iodine():
 def ozyman():
     return run_experiment("OzymanDNS")
 
+@app.command()
+def tuns():
+    return run_experiment("TUNS")
+
 @app.callback()
 def main(verbose: bool = False, destroy: bool = False):
     if verbose:
