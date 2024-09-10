@@ -86,6 +86,10 @@ def dns2tcp():
     return run_experiment("dns2tcp")
 
 @app.command()
+def dnscat2():
+    return run_experiment("dnscat2")
+
+@app.command()
 def dnstt():
     return run_experiment("dnstt")
 
