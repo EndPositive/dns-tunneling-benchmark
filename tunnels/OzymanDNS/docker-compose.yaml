@@ -1,7 +1,7 @@
 services:
   dns-tunnel-server:
     build:
-      context: tunnels/OzymanDNS
+      context: tunnels/OzymanDNS/OzymanDNS
       dockerfile: Dockerfile
     image: ozymandns
     container_name: dns-tunnel-server
@@ -20,7 +20,7 @@ services:
 
   dns-tunnel-client:
     build:
-      context: tunnels/OzymanDNS
+      context: tunnels/OzymanDNS/OzymanDNS
       dockerfile: Dockerfile
     image: ozymandns
     container_name: dns-tunnel-client

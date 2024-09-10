@@ -10,3 +10,6 @@
 [submodule "tools/hev-socks5-tunnel"]
 	path = tools/hev-socks5-tunnel
 	url = git@github.com:heiher/hev-socks5-tunnel.git
+[submodule "tunnels/OzymanDNS/OzymanDNS"]
+	path = tunnels/OzymanDNS/OzymanDNS
+	url = git@github.com:EndPositive/OzymanDNS.git
