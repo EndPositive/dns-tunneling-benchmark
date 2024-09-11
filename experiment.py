@@ -16,13 +16,24 @@ state = {
 
 conf.use_pcap = True
 
+SERVICE_LIST = [
+    "big-files",
+    "hev-socks5-server",
+    "iperf3-hev-socks5-tunnel",
+    "dns-tunnel-server",
+    "dns-tunnel-client"
+]
+
+
 def get_interface_name(network: Network):
     interface_name = f"br-{network.id[:12]}"
     return interface_name
 
+
 def countdown_timer(seconds):
     for _ in tqdm(range(seconds, 0, -1), desc="Countdown", unit="s"):
         time.sleep(1)
+
 
 def run_experiment(tunnel_name: str):
     docker_client_network = DockerClient(
@@ -36,7 +47,7 @@ def run_experiment(tunnel_name: str):
 
     if state["destroy"]:
         try:
-            docker_client_network.compose.down(volumes=True)
+            docker_client_network.compose.down(services=SERVICE_LIST, volumes=True)
         except KeyboardInterrupt:
             print("KeyboardInterrupt")
             docker_client_network.compose.down(timeout=1)
@@ -45,6 +56,12 @@ def run_experiment(tunnel_name: str):
     docker_client_network.compose.build()
 
     try:
+        print(f"Stopping any running containers")
+        output_stream = docker_client_network.compose.stop(services=SERVICE_LIST, stream_logs=True)
+
+        for _, stream_content in output_stream:
+            print(stream_content.decode("utf-8"), end="")
+
         docker_client_network.compose.up(services=["cadvisor"], wait=True)
         docker_client_network.compose.up(wait=True)
 
@@ -82,29 +99,36 @@ def run_experiment(tunnel_name: str):
     except Exception as e:
         print(e)
 
+
 @app.command()
 def dns2tcp():
     return run_experiment("dns2tcp")
+
 
 @app.command()
 def dnscat2():
     return run_experiment("dnscat2")
 
+
 @app.command()
 def dnstt():
     return run_experiment("dnstt")
+
 
 @app.command()
 def iodine():
     return run_experiment("iodine")
 
+
 @app.command()
 def ozyman():
     return run_experiment("OzymanDNS")
 
+
 @app.command()
 def tuns():
     return run_experiment("TUNS")
+
 
 @app.callback()
 def main(verbose: bool = False, destroy: bool = False):
@@ -112,6 +136,7 @@ def main(verbose: bool = False, destroy: bool = False):
         state["verbose"] = True
     if destroy:
         state["destroy"] = True
+
 
 if __name__ == "__main__":
     app()
