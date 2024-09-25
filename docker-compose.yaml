@@ -1,24 +1,5 @@
 name: benchmark
 services:
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
-    container_name: cadvisor
-    restart: unless-stopped
-    privileged: true
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    devices:
-      - /dev/kmsg
-    networks:
-      experiment:
-        ipv4_address: 172.22.0.8
-    ports:
-      - "8080:8080"
-  
   big-files:
     build:
       context: tools/big-files
@@ -27,13 +8,11 @@ services:
     restart: unless-stopped
     networks:
       experiment:
-        ipv4_address: 172.22.0.7
-    ports:
+        ipv4_address: ${IPV4_ADDRESS_BIG_FILES}
+    expose:
       - "8000/tcp"
-    depends_on:
-      - cadvisor
   
-  hev-socks5-server:
+  socks-server:
     build:
       context: tools/hev-socks5-server
       dockerfile: docker/Dockerfile
@@ -42,11 +21,9 @@ services:
     restart: unless-stopped
     networks:
       experiment:
-        ipv4_address: 172.22.0.6
-    ports:
+        ipv4_address: ${IPV4_ADDRESS_SOCKS_SERVER}
+    expose:
       - "1080/tcp"
-    depends_on:
-      - cadvisor
   
   hev-socks5-client:
     build:
@@ -56,7 +33,7 @@ services:
     profiles:
       - client-build-only  # This service won't run by default but will be built
   
-  iperf3-hev-socks5-tunnel:
+  socks-client:
     build:
       context: tools/iperf3-hev-socks5-tunnel
     container_name: socks-client
@@ -73,19 +50,26 @@ services:
       IPV4_EXCLUDED_ROUTES: "0.0.0.0/0"
     networks:
       experiment:
-        ipv4_address: 172.22.0.5
+        ipv4_address: ${IPV4_ADDRESS_SOCKS_CLIENT}
     depends_on:
       - dns-tunnel-client
-      - cadvisor
-
-  iperf3-server:
-    image: mlabbe/iperf3
+  
+  dns-resolver:
+    build:
+      context: tools/coredns
+      dockerfile: Dockerfile
+    container_name: dns-resolver
+    pull_policy: never
+    image: dns-resolver
+    environment:
+      IPV4_ADDRESS_DNS_TUNNEL_SERVER: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
+    command: sh -c "envsubst < Corefile.tmp > Corefile && coredns"
     restart: unless-stopped
     networks:
       experiment:
-        ipv4_address: 172.22.0.4
-    depends_on:
-      - cadvisor
+        ipv4_address: ${IPV4_ADDRESS_DNS_RESOLVER}
+    volumes:
+      - ./tools/coredns/Corefile:/Corefile
 
 networks:
   experiment:

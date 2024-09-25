@@ -5,33 +5,31 @@ services:
       dockerfile: Dockerfile
     image: ozymandns
     container_name: dns-tunnel-server
-    command: ./nomde.pl -i 0.0.0.0 a.org -L sshdns:172.22.0.6:1080
+    command: ./nomde.pl -i 0.0.0.0 test.com -L sshdns:${IPV4_ADDRESS_SOCKS_SERVER}:1080
     restart: unless-stopped
     stop_grace_period: 1s
     networks:
       experiment:
-        ipv4_address: 172.22.0.2
-    ports:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
+    expose:
       - "53/udp"
       - "53/tcp"
     depends_on:
-      - hev-socks5-server
-      - cadvisor
-
+      - socks-server
+  
   dns-tunnel-client:
     build:
       context: tunnels/OzymanDNS/OzymanDNS
       dockerfile: Dockerfile
     image: ozymandns
     container_name: dns-tunnel-client
-    command: socat TCP-LISTEN:8000,fork EXEC:"./droute.pl -r 172.22.0.2 sshdns.a.org"
+    command: socat TCP-LISTEN:8000,fork EXEC:"./droute.pl -r ${IPV4_ADDRESS_DNS_RESOLVER} sshdns.test.com"
     restart: unless-stopped
     networks:
       experiment:
-        ipv4_address: 172.22.0.3
-    ports:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT}
+    expose:
       - "8000/udp"
       - "8000/tcp"
     depends_on:
       - dns-tunnel-server
-      - cadvisor

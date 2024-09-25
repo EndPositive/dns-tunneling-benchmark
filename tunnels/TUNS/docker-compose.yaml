@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     image: tuns
     container_name: dns-tunnel-server
-    command: sh -c "ruby tuns-server --debug -i 10.0.0.1 -t 10.0.0.2 -d test.com & (sleep 100 && socat tcp-listen:1080,fork,bind=10.0.0.1 tcp:172.22.0.6:1080)"
+    command: sh -c "ruby tuns-server --debug -i 10.0.0.1 -t 10.0.0.2 -d test.com & (sleep 1 && socat tcp-listen:1080,fork,bind=10.0.0.1 tcp:${IPV4_ADDRESS_SOCKS_SERVER}:1080)"
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -13,21 +13,20 @@ services:
       - '/dev/net/tun:/dev/net/tun'
     networks:
       experiment:
-        ipv4_address: 172.22.0.2
-    ports:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
+    expose:
       - "53/udp"
       - "53/tcp"
     depends_on:
-      - hev-socks5-server
-      - cadvisor
-
+      - socks-server
+  
   dns-tunnel-client:
     build:
       context: tunnels/TUNS
       dockerfile: Dockerfile
     image: tuns
     container_name: dns-tunnel-client
-    command: sh -c "ruby tuns-client --debug -i 10.0.0.2 -t 10.0.0.1 -n 172.22.0.2 -d test.com & (sleep 1 && socat tcp-listen:8000,fork,bind=172.22.0.3 tcp:10.0.0.1:1080)"
+    command: sh -c "ruby tuns-client --debug -i 10.0.0.2 -t 10.0.0.1 -n ${IPV4_ADDRESS_DNS_RESOLVER} -d test.com & (sleep 1 && socat tcp-listen:8000,fork,bind=${IPV4_ADDRESS_DNS_TUNNEL_CLIENT} tcp:10.0.0.1:1080)"
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
@@ -35,10 +34,9 @@ services:
       - '/dev/net/tun:/dev/net/tun'
     networks:
       experiment:
-        ipv4_address: 172.22.0.3
-    ports:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT}
+    expose:
       - "8000/udp"
       - "8000/tcp"
     depends_on:
       - dns-tunnel-server
-      - cadvisor

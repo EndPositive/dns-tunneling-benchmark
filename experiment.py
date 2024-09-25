@@ -1,28 +1,69 @@
+import tempfile
 import time
-from typing import Iterable, Tuple
+from contextlib import contextmanager
 
 import typer
 from python_on_whales import DockerClient, Network
 from scapy.all import conf
 from scapy.sendrecv import AsyncSniffer
 from scapy.utils import wrpcap
-from tqdm import tqdm
 
 app = typer.Typer()
-state = {
-    "verbose": False,
-    "destroy": False,
-}
+opt_verbose = False
+opt_destroy = False
+opt_use_dns_resolver = False
 
 conf.use_pcap = True
 
-SERVICE_LIST = [
+env = {
+    "IPV4_ADDRESS_SOCKS_SERVER": "172.22.0.6",
+    "IPV4_ADDRESS_BIG_FILES": "172.22.0.7",
+    "IPV4_ADDRESS_SOCKS_CLIENT": "172.22.0.5",
+    "IPV4_ADDRESS_IPERF3_SERVER": "172.22.0.4",
+    "IPV4_ADDRESS_DNS_TUNNEL_CLIENT": "172.22.0.3",
+    "IPV4_ADDRESS_DNS_TUNNEL_SERVER": "172.22.0.2",
+    "IPV4_ADDRESS_DNS_RESOLVER": "172.22.0.9",
+}
+
+SERVICES = [
     "big-files",
-    "hev-socks5-server",
-    "iperf3-hev-socks5-tunnel",
+    "socks-server",
+    "socks-client",
+    "dns-resolver",
     "dns-tunnel-server",
-    "dns-tunnel-client"
+    "dns-tunnel-client",
 ]
+
+
+@contextmanager
+def packet_sniffer(interface, filename):
+    """Context manager to handle packet sniffing."""
+    sniffer = AsyncSniffer(iface=interface, count=0)
+    print("Starting packet sniffer")
+    sniffer.start()
+    time.sleep(1)
+    try:
+        yield sniffer
+    finally:
+        print("Stopping packet sniffer")
+        time.sleep(1)
+        packets = sniffer.stop()
+        wrpcap(filename, packets)
+        print(f"Captured packets saved to {filename}")
+
+
+def stream_logs(fn, *args, **kwargs):
+    output_stream = fn(*args, **kwargs, stream_logs=True)
+
+    for _, stream_content in output_stream:
+        print(stream_content.decode("utf-8"), end="")
+
+
+def stream(fn, *args, **kwargs):
+    output_stream = fn(*args, **kwargs, stream=True)
+
+    for _, stream_content in output_stream:
+        print(stream_content.decode("utf-8"), end="")
 
 
 def get_interface_name(network: Network):
@@ -30,74 +71,67 @@ def get_interface_name(network: Network):
     return interface_name
 
 
-def countdown_timer(seconds):
-    for _ in tqdm(range(seconds, 0, -1), desc="Countdown", unit="s"):
-        time.sleep(1)
-
-
 def run_experiment(tunnel_name: str):
-    docker_client_network = DockerClient(
+    if not opt_use_dns_resolver:
+        env["IPV4_ADDRESS_DNS_RESOLVER"] = env["IPV4_ADDRESS_DNS_TUNNEL_SERVER"]
+        SERVICES.remove("dns-resolver")
+
+    # Create a temporary .env file
+    with tempfile.NamedTemporaryFile(
+        mode="w+", delete=False, suffix=".env"
+    ) as temp_env:
+        for key, value in env.items():
+            temp_env.write(f"{key}={value}\n")
+
+        # Save the file name for later use
+        temp_env_filename = temp_env.name
+
+    docker_client = DockerClient(
         compose_files=[
             "docker-compose.yaml",
-            f"tunnels/{tunnel_name}/docker-compose.yaml"
+            f"tunnels/{tunnel_name}/docker-compose.yaml",
         ],
-
-        # context=os.getcwd(),
+        compose_env_files=[temp_env_filename],
     )
 
-    if state["destroy"]:
-        try:
-            docker_client_network.compose.down(services=SERVICE_LIST, volumes=True)
-        except KeyboardInterrupt:
-            print("KeyboardInterrupt")
-            docker_client_network.compose.down(timeout=1)
+    if opt_destroy:
+        docker_client.compose.down(volumes=True, timeout=1)
         return
 
-    docker_client_network.compose.build()
+    # docker_client.compose.build()
 
-    try:
-        print(f"Stopping any running containers")
-        output_stream = docker_client_network.compose.stop(services=SERVICE_LIST, stream_logs=True)
+    print("Downing any running containers")
+    stream_logs(docker_client.compose.down, timeout=1)
 
-        for _, stream_content in output_stream:
-            print(stream_content.decode("utf-8"), end="")
+    print("Bringing up new containers")
+    stream_logs(docker_client.compose.up, services=SERVICES, wait=True, color=True)
 
-        docker_client_network.compose.up(services=["cadvisor"], wait=True)
-        docker_client_network.compose.up(wait=True)
+    print("Inspecting created network")
+    network = docker_client.network.inspect("benchmark_experiment")
 
-        # Countdown timer before sniffing
-        countdown_timer(10)
+    # Countdown timer before sniffing
+    print("Waiting for all components to initialize (10 seconds)")
+    time.sleep(10)
 
-        network = docker_client_network.network.inspect("benchmark_experiment")
+    file_name = f"pcap-{"dns-resolver" if opt_use_dns_resolver else "no-dns-resolver"}-{tunnel_name}-{time.strftime('%Y%m%d-%H%M%S')}.pcap"
 
-        # Perform packet sniffing
-        a = AsyncSniffer(iface=get_interface_name(network), count=0)
-        a.start()
-
-        # Run docker exec asynchronously
-        output_stream: Iterable[Tuple[str, bytes]] = docker_client_network.container.execute(
+    with packet_sniffer(
+        get_interface_name(network),
+        file_name,
+    ):
+        stream(
+            docker_client.container.execute,
             "socks-client",
             [
-                "curl", "--interface",
+                "curl",
+                "--interface",
                 "tun0",
-                "http://172.22.0.7:8000/1mb.txt",
-                "-vvv", "--output",
-                "1mb.txt"
+                f"http://{env["IPV4_ADDRESS_BIG_FILES"]}:8000/1mb.txt",
+                "-vvv",
+                "--output",
+                "1mb.txt",
             ],
-            stream=True
         )
-
-        for _, stream_content in output_stream:
-            print(stream_content.decode("utf-8"), end="")
-
-        packets = a.stop()
-
-        # Save captured packets
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        wrpcap(f"packets-{tunnel_name}-{timestamp}.pcap", packets)
-
-    except Exception as e:
-        print(e)
 
 
 @app.command()
@@ -131,11 +165,16 @@ def tuns():
 
 
 @app.callback()
-def main(verbose: bool = False, destroy: bool = False):
+def main(verbose: bool = False, destroy: bool = False, use_dns_resolver: bool = False):
+    global opt_verbose
+    global opt_destroy
+    global opt_use_dns_resolver
     if verbose:
-        state["verbose"] = True
+        opt_verbose = True
     if destroy:
-        state["destroy"] = True
+        opt_destroy = True
+    if use_dns_resolver:
+        opt_use_dns_resolver = True
 
 
 if __name__ == "__main__":

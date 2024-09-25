@@ -5,33 +5,31 @@ services:
       dockerfile: Dockerfile.server
     image: dnscat2-server
     container_name: dns-tunnel-server
-    command: 172.22.0.6
+    command: ${IPV4_ADDRESS_SOCKS_SERVER}
     restart: unless-stopped
     networks:
       experiment:
-        ipv4_address: 172.22.0.3
-    ports:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT}
+    expose:
       - "8000/udp"
       - "8000/tcp"
     depends_on:
-      - hev-socks5-server
-      - cadvisor
-
+      - socks-server
+  
   dns-tunnel-client:
     build:
       context: tunnels/dnscat2
       dockerfile: Dockerfile.client
     image: dnscat2-client
     container_name: dns-tunnel-client
-    command: --dns domain=test.com,server=172.22.0.3,port=53
+    command: --dns domain=test.com,server=${IPV4_ADDRESS_DNS_TUNNEL_CLIENT},port=53
     restart: unless-stopped
     stop_grace_period: 1s
     networks:
       experiment:
-        ipv4_address: 172.22.0.2
-    ports:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
+    expose:
       - "53/udp"
       - "53/tcp"
     depends_on:
       - dns-tunnel-server
-      - cadvisor
