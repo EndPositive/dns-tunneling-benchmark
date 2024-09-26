@@ -1,0 +1,38 @@
+services:
+  dns-tunnel-server:
+    build:
+      context: tunnels/dns2tcp
+      dockerfile: Dockerfile
+    image: dns2tcp
+    container_name: dns-tunnel-server
+    environment:
+      IPV4_ADDRESS_SOCKS_SERVER: ${IPV4_ADDRESS_SOCKS_SERVER}
+    command: sh -c "envsubst < .dns2tcpdrc.tmp > .dns2tcpdrc && dns2tcpd -F -d 1 -f /usr/src/app/.dns2tcpdrc"
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
+    expose:
+      - "53/udp"
+      - "53/tcp"
+    depends_on:
+      - socks-server
+  
+  dns-tunnel-client:
+    build:
+      context: tunnels/dns2tcp
+      dockerfile: Dockerfile
+    image: dns2tcp
+    container_name: dns-tunnel-client
+    environment:
+      IPV4_ADDRESS_SOCKS_SERVER: ${IPV4_ADDRESS_SOCKS_SERVER}
+    command: sh -c "envsubst < .dns2tcpdrc.tmp > .dns2tcpdrc && dns2tcpc -r socks -l 1080 -k key -z test.com ${IPV4_ADDRESS_DNS_RESOLVER} | (sleep 2 && socat tcp-listen:8000,fork tcp:127.0.0.1:1080)"
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT}
+    expose:
+      - "8000/udp"
+      - "8000/tcp"
+    depends_on:
+      - dns-tunnel-server

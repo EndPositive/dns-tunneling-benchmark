@@ -1,0 +1,80 @@
+name: benchmark
+services:
+  big-files:
+    build:
+      context: tools/big-files
+    container_name: big-files
+    image: big-files
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_BIG_FILES}
+    expose:
+      - "8000/tcp"
+  
+  socks-server:
+    build:
+      context: tools/hev-socks5-server
+      dockerfile: docker/Dockerfile
+    container_name: socks-server
+    image: heiher/hev-socks5-server
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_SOCKS_SERVER}
+    expose:
+      - "1080/tcp"
+  
+  hev-socks5-client:
+    build:
+      context: tools/hev-socks5-tunnel
+    image: heiher/hev-socks5-client
+    restart: unless-stopped
+    profiles:
+      - client-build-only  # This service won't run by default but will be built
+  
+  socks-client:
+    build:
+      context: tools/iperf3-hev-socks5-tunnel
+    container_name: socks-client
+    image: iperf3-hev-socks5-tunnel
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - '/dev/net/tun:/dev/net/tun'
+    environment:
+      SOCKS5_ADDR: "172.22.0.3"
+      SOCKS5_PORT: "8000"
+      SOCKS5_UDP_MODE: "tcp"
+      IPV4_EXCLUDED_ROUTES: "0.0.0.0/0"
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_SOCKS_CLIENT}
+    depends_on:
+      - dns-tunnel-client
+  
+  dns-resolver:
+    build:
+      context: tools/coredns
+      dockerfile: Dockerfile
+    container_name: dns-resolver
+    pull_policy: never
+    image: dns-resolver
+    environment:
+      IPV4_ADDRESS_DNS_TUNNEL_SERVER: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
+    command: sh -c "envsubst < Corefile.tmp > Corefile && coredns"
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_DNS_RESOLVER}
+    volumes:
+      - ./tools/coredns/Corefile:/Corefile
+
+networks:
+  experiment:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16

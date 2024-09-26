@@ -1,5 +1,0 @@
-listen = 0.0.0.0
-port = 53
-key = key
-domain = test.com
-resources = socks:${IPV4_ADDRESS_SOCKS_SERVER}:1080

@@ -1,0 +1,1 @@
+{"status": "SUCCESS", "result": {"status": "completed", "pcap_file_name": "./celery/artifacts/5e05e68a-628c-4dea-b1b5-9959ef2075a2.pcap", "tunnel": "iodine", "use_dns_resolver": false, "file_size": "1mb"}, "traceback": null, "children": [], "date_done": "2024-09-26T10:24:58.501379+00:00", "task_id": "5e05e68a-628c-4dea-b1b5-9959ef2075a2"}

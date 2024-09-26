@@ -1,3 +1,0 @@
-test.com {
-    forward . ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}:53
-}

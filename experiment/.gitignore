@@ -1,0 +1,16 @@
+venv/
+
+# For working with VPN
+exclude_docker_network.rules
+
+# Ignore everything in celery folder
+celery/*
+
+# Celery backend
+control/*
+
+# Except the result JSON files
+!celery/results/
+!celery/results/*.json
+!celery/artifacts/
+!celery/artifacts/*.pcap
