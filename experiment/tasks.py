@@ -5,16 +5,8 @@ import time
 from python_on_whales import DockerClient
 
 from celery import Task
-from lib import (
-    SERVICES,
-    create_tmp_env_file,
-    env,
-    get_interface_name,
-    logger,
-    start_tshark_process,
-    stream,
-    stream_logs,
-)
+from lib import SERVICES, apply_netem, create_tmp_env_file, env, get_interface_name, get_veth_names, logger, \
+    start_tshark_process, stream, stream_logs
 from worker import app
 
 
@@ -44,6 +36,13 @@ def run_experiment(
     stream_logs(docker_client.compose.up, services=SERVICES, wait=True, color=True)
 
     try:
+        veth_names = get_veth_names()
+        dns_tunnel_client_veth_name = veth_names["dns-tunnel-client"]
+        logger.info(f"dns-tunnel-client veth {dns_tunnel_client_veth_name}")
+
+        logger.info("Applying network emulation on dns-tunnel-client")
+        apply_netem(dns_tunnel_client_veth_name)
+
         logger.info("Inspecting created network")
         network = docker_client.network.inspect("benchmark_experiment")
 

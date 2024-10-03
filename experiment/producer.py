@@ -30,11 +30,19 @@ def destroy():
 
 
 @cli.command()
-def run():
+def run_async():
     task = run_experiment.apply_async(
         args=[opt_tunnel.value, opt_use_dns_resolver, opt_file_size.value, opt_verbose],
     )
     result = task.get(timeout=60)
+    print(f"Task result: {result}")
+
+
+@cli.command()
+def run():
+    result = run_experiment.apply(
+        args=[opt_tunnel.value, opt_use_dns_resolver, opt_file_size.value, opt_verbose],
+    )
     print(f"Task result: {result}")
 
 

@@ -1,4 +1,5 @@
 import logging
+from getpass import getpass
 import subprocess
 import tempfile
 from contextlib import contextmanager
@@ -73,6 +74,25 @@ def get_interface_name(network: Network):
     interface_name = f"br-{network.id[:12]}"
     return interface_name
 
+def get_veth_names():
+    password = getpass("Please enter your password: ")
+    result = subprocess.run(["sudo", "-S", "sh", "./tools/dockerveth/dockerveth.sh"], input=password + "\n", capture_output=True, text=True, check=True)
+    lines = result.stdout.split("\n")
+    veth_names = {}
+    for line in lines[1:]:
+        if len(line) == 0:
+            continue
+        container_id, veth, name = line.split()
+        veth_names[name] = veth
+    return veth_names
+
+
+def apply_netem(veth: str, delay_ms: int = 183, jitter_ms: int = 15, loss_percentage: int = 9):
+    subprocess.run(f"sudo tc qdisc add dev {veth} root handle 1: tbf rate 21mbit burst 32kbit latency 50ms".split(), check=True)
+    subprocess.run(f"sudo tc qdisc add dev {veth} root netem delay {delay_ms}ms {jitter_ms}ms loss {loss_percentage}%".split(), check=True)
+
+def reset_netem(veth: str):
+    subprocess.run(f"tc qdisc del dev {veth} root".split(), check=True)
 
 def create_tmp_env_file(use_dns_resolver: bool) -> str:
     if not use_dns_resolver:

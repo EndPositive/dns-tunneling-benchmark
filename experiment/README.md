@@ -24,11 +24,11 @@ We can use the following script to retrieve this.
 ```bash
 sudo sh tools/dockerveth/dockerveth.sh
 CONTAINER ID    VETH            NAMES
-65a34b856518    veth349fc67     tuns-dns-tunnel-client-1
-12913dbbdce6    veth7fe455a     tuns-socks-client-1
-ef159eb474f1    vetha262d9a     tuns-dns-tunnel-server-1
-0d9345b1fef7    veth8caa5d4     tuns-socks-server-1
-2b73f6a4feed    vethc56f044     tuns-iperf3-server-1
+05b9d2602aae    veth66a9291     socks-client
+9d7d74350889    vethefabfab     dns-tunnel-client
+89e7a303e18e    vethe819321     dns-tunnel-server
+eb939b84f5cd    veth73c5679     big-files
+c08f52791c21    veth1b6fb8a     socks-server
 ```
 
 Then it is possible to add network emulation to the virtual interface.
