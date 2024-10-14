@@ -1,0 +1,21 @@
+name: benchmark
+services:
+  dns-resolver:
+    build:
+      context: tools/coredns
+      dockerfile: Dockerfile
+    container_name: dns-resolver
+    pull_policy: never
+    image: dns-resolver
+    environment:
+      IPV4_ADDRESS_DNS_TUNNEL_SERVER: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
+    command: sh -c "envsubst < Corefile.tmp > Corefile && coredns"
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_DNS_RESOLVER}
+    volumes:
+      - ./tools/coredns/Corefile:/Corefile
+    expose:
+      - "53/udp"
+      - "53/tcp"

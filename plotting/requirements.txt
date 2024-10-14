@@ -2,3 +2,5 @@ dpkt==1.9.8
 plotly==5.24.0
 notebook==7.2.2
 dash==2.18.0
+pandas[performance]==2.2.3
+kaleido==0.2.1

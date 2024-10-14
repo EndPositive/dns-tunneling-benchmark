@@ -1,0 +1,8 @@
+name: benchmark
+networks:
+  experiment:
+    driver: bridge
+    enable_ipv6: false
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16

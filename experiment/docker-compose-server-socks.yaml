@@ -1,0 +1,14 @@
+name: benchmark
+services:
+  socks-server:
+    build:
+      context: tools/hev-socks5-server
+      dockerfile: docker/Dockerfile
+    container_name: socks-server
+    image: heiher/hev-socks5-server
+    restart: unless-stopped
+    environment:
+      LOG_LEVEL: debug
+    network_mode: container:dns-tunnel-server
+    depends_on:
+      - dns-tunnel-server

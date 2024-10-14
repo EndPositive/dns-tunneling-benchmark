@@ -1,0 +1,12 @@
+name: benchmark
+services:
+  iperf3-client:
+    build:
+      context: tools/iperf3
+    container_name: iperf3-client
+    image: iperf3
+    restart: unless-stopped
+    command: sleep infinity
+    network_mode: container:dns-tunnel-client
+    depends_on:
+      - dns-tunnel-client

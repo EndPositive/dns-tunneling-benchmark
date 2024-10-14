@@ -1,0 +1,16 @@
+services:
+  dns-tunnel-server:
+    build:
+      context: tunnels/socks/OzymanDNS/OzymanDNS
+      dockerfile: Dockerfile
+    image: ozymandns
+    container_name: dns-tunnel-server
+    command: ./nomde.pl -i 0.0.0.0 test.com -L sshdns:127.0.0.1:1080
+    restart: unless-stopped
+    stop_grace_period: 1s
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
+    expose:
+      - "53/udp"
+      - "53/tcp"

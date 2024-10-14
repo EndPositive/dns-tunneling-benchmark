@@ -1,0 +1,16 @@
+services:
+  dns-tunnel-client:
+    build:
+      context: tunnels/tun/iodine
+      dockerfile: Dockerfile
+    image: iodine
+    container_name: dns-tunnel-client
+    command: iodine -r -f ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT_TARGET_RESOLVER} test.com
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - '/dev/net/tun:/dev/net/tun'
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT}

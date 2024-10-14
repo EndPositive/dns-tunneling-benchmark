@@ -1,15 +1,12 @@
-[submodule "TUNS/tuns"]
-	path = experiment/tunnels/TUNS/tuns
+[submodule "experiment/tunnels/tun/TUNS/tuns"]
+	path = experiment/tunnels/tun/TUNS/tuns
 	url = git@github.com:lnussbaum/tuns.git
-[submodule "dockerveth"]
-	path = experiment/tools/dockerveth
-	url = git@github.com:micahculpepper/dockerveth.git
-[submodule "tools/hev-socks5-server"]
+[submodule "experiment/tools/hev-socks5-server"]
 	path = experiment/tools/hev-socks5-server
 	url = git@github.com:heiher/hev-socks5-server.git
-[submodule "tools/hev-socks5-tunnel"]
+[submodule "experiment/tools/hev-socks5-tunnel"]
 	path = experiment/tools/hev-socks5-tunnel
 	url = git@github.com:heiher/hev-socks5-tunnel.git
-[submodule "tunnels/OzymanDNS/OzymanDNS"]
-	path = experiment/tunnels/OzymanDNS/OzymanDNS
+[submodule "experiment/tunnels/socks/OzymanDNS/OzymanDNS"]
+	path = experiment/tunnels/socks/OzymanDNS/OzymanDNS
 	url = git@github.com:EndPositive/OzymanDNS.git

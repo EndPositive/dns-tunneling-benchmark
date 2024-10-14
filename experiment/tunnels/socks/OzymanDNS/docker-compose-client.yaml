@@ -1,0 +1,12 @@
+services:
+  dns-tunnel-client:
+    build:
+      context: tunnels/socks/OzymanDNS/OzymanDNS
+      dockerfile: Dockerfile
+    image: ozymandns
+    container_name: dns-tunnel-client
+    command: socat TCP-LISTEN:1080,fork EXEC:"./droute.pl -r ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT_TARGET_RESOLVER} sshdns.test.com"
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT}

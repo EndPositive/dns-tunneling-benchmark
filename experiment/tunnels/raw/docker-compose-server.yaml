@@ -1,0 +1,12 @@
+services:
+  dns-tunnel-server:
+    image: alpine:3.20.3
+    container_name: dns-tunnel-server
+    command: sleep infinity
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
+    expose:
+      - "1080/udp"
+      - "1080/tcp"

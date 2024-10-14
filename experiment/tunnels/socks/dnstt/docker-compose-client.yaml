@@ -1,0 +1,12 @@
+services:
+  dns-tunnel-client:
+    build:
+      context: tunnels/socks/dnstt
+      dockerfile: Dockerfile
+    image: dnstt
+    container_name: dns-tunnel-client
+    command: dnstt-client -udp ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT_TARGET_RESOLVER}:53 -pubkey-file server.pub test.com 127.0.0.1:1080
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT}

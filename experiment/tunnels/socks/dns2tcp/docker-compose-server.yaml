@@ -1,0 +1,15 @@
+services:
+  dns-tunnel-server:
+    build:
+      context: tunnels/socks/dns2tcp
+      dockerfile: Dockerfile
+    image: dns2tcp
+    container_name: dns-tunnel-server
+    command: dns2tcpd -F -d 1 -f /usr/src/app/.dns2tcpdrc
+    restart: unless-stopped
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
+    expose:
+      - "53/udp"
+      - "53/tcp"

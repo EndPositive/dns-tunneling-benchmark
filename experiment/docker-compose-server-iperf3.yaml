@@ -1,0 +1,17 @@
+name: benchmark
+services:
+  iperf3-server:
+    build:
+      context: tools/iperf3
+      dockerfile: Dockerfile
+    container_name: iperf3-server
+    image: iperf3
+    pull_policy: never
+    command: iperf3 -s -J
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_IPERF3_SERVER}
+    expose:
+      - "5201/udp"
+      - "5201/tcp"
+  
