@@ -7,11 +7,13 @@ services:
     container_name: iperf3-server
     image: iperf3
     pull_policy: never
-    command: iperf3 -s -J
+    command: iperf3 -s -V -dddd
     networks:
       experiment:
         ipv4_address: ${IPV4_ADDRESS_IPERF3_SERVER}
     expose:
       - "5201/udp"
       - "5201/tcp"
-  
+    ports:
+      - "5201:5201/udp"
+      - "5201:5201/tcp"

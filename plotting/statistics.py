@@ -1,122 +1,196 @@
 import json
+import logging
 from pathlib import Path
 
+import holoviews as hv
+import hvplot.pandas  # noqa
+import numpy as np
 import pandas as pd
-import plotly.express as px
-from dash import Dash, Input, Output, dcc, html
+import panel as pn
 
-def process_all_dfs(task_ids):
+pd.options.plotting.backend = 'holoviews'
+
+hv.extension('bokeh')
+
+# Setup logger
+logging.basicConfig(level=logging.INFO)
+
+def process_all_dfs(celery_task_results):
     all_dfs = []
+    global_max_time = 0  # To track the maximum time across all tasks
 
-    for task_id in task_ids:
+    for celery_task_result in celery_task_results:
+        task_id = celery_task_result["task_id"]
+        tunnel_name = celery_task_result["result"]["tunnel"]
+        use_dns_resolver = celery_task_result["result"]["use_dns_resolver"]
+        upload = celery_task_result["result"]["upload"]
+        download = celery_task_result["result"]["download"]
+        local = celery_task_result["result"]["local"]
+
+        test_type = ""
+        if upload and download:
+            test_type = "bidir"
+        elif upload:
+            test_type = "upload"
+        elif download:
+            test_type = "download"
+
         # Load the CSV into a pandas DataFrame
         df = pd.read_csv(f"../experiment/celery/artifacts/{task_id}.csv")
 
-        # Ensure frame.time_relative is numeric (for grouping) and ip.len is in megabits (Mb)
-        df['frame.time_relative'] = pd.to_numeric(df['frame.time_relative'], errors='coerce')
-        df = df[df['frame.time_relative'] <= 90]
+        # Convert columns to numeric, handle errors by coercing to NaN
+        # Bin time to the nearest second
+        df['frame.time_relative'] = np.ceil(pd.to_numeric(df['frame.time_relative'], errors='coerce'))
+        df['frame.len'] = pd.to_numeric(df['frame.len'], errors='coerce')
 
-        # Round the frame.time_relative to nearest second for bucketing
-        df['time_bin'] = df['frame.time_relative'].round()
-
-        df['ip.len'] = pd.to_numeric(df['ip.len'], errors='coerce') * 8 / 1_000_000  # Convert to megabits
-
-        # Group by time_bin, ip.dst, and interface_id, then sum the ip.len for each group
-        df_grouped = df.groupby(['time_bin', 'ip.dst', 'frame.interface_id']).agg({'ip.len': 'sum'}).reset_index()
+        # Convert frame.len to megabits
+        df['frame.len'] = df['frame.len'] * 8 / 1_000_000
 
         dns_tunnel_server_ip = '172.22.0.6'
         iperf3_server_ip = '172.22.0.8'
-        # whether this packet is upload or download
-        df_grouped['type'] = df_grouped['ip.dst'].apply(lambda x: 'upload' if x == dns_tunnel_server_ip or x == iperf3_server_ip else 'download')
+        iperf3_server_ip_public = '64.176.43.164'
+        if tunnel_name.startswith("socks"):
+            df['traffic_type'] = np.where(
+                ((df['ip.dst'] == '127.0.0.1') & (df['tcp.dstport'] == 5201)) | ((df['ip.dst'] == '172.22.0.6') & (df['udp.dstport'] == 53)),
+                'upload',
+                'download'
+            )
+        elif tunnel_name == "raw":
+            df['traffic_type'] = np.where(df['ip.dst'].isin([iperf3_server_ip, iperf3_server_ip_public]), 'upload', 'download')
+        else:
+            df['traffic_type'] = np.where(df['ip.dst'].isin([dns_tunnel_server_ip, iperf3_server_ip, iperf3_server_ip_public]), 'upload', 'download')
 
-        # interface name
-        df_grouped['interface'] = df_grouped['frame.interface_id'].apply(lambda x: 'outer' if x == 0 else 'inner')
+        # Convert frame.len to negative if 'upload'
+        df['frame.len'] = np.where(df['traffic_type'] == 'upload', -df['frame.len'], df['frame.len'])
 
-        # Add a column to identify which task the data belongs to
-        df_grouped['task_id'] = task_id
+        # interface_id: 0 (eth0) = inner
+        # interface_id: 1 (lo) = outer
+        # interface_id: 2 (dns0) = outer
+        df['interface'] = np.where(df['frame.interface_id'] == 0, 'inner', 'outer')
 
-        all_dfs.append(df_grouped)
+        # Group by 'frame.time_relative', 'traffic_type', 'interface' and sum frame.len
+        df_grouped = df.groupby(['frame.time_relative', 'traffic_type', 'interface'], as_index=False)['frame.len'].sum()
 
-    return all_dfs
+        if tunnel_name == "raw":
+            # Duplicate the grouped rows where the interface is 'inner'
+            df_inner = df_grouped[df_grouped['interface'] == 'inner'].copy()
+            df_inner['interface'] = 'outer'  # Change 'inner' to 'outer'
 
+            # Append the duplicated outer rows to the grouped dataframe
+            df_grouped = pd.concat([df_grouped, df_inner], ignore_index=True)
 
-def plot_tasks(task_ids, all_dfs):
-    # select task_ids from the all_dfs dataframe
-    dfs = [df for df in all_dfs if df['task_id'].iloc[0] in task_ids]
+        # clear df to save memory
+        del df
 
-    # Combine all task data into one DataFrame
-    df_combined = pd.concat(dfs)
+        # Update the global maximum time
+        task_max_time = df_grouped['frame.time_relative'].max()
+        global_max_time = max(global_max_time, task_max_time)
 
-    # Create a line plot for the summed ip.len over time, with different traces per task
-    fig = px.line(
-        df_combined,
-        x='time_bin',
-        y='ip.len',
-        color='type',
-        line_dash='interface',
-        symbol='task_id',
-        title="Traffic over Time (Upload/Download per Interface per Task)",
-        labels={
-            'time_bin': 'Time (seconds)',
-            'ip.len': 'Traffic Volume (Mb)',
-            'color': 'Traffic Type',
-            'line_dash': 'Interface',
-            'task_id': 'Task ID'
-        }
+        # Store the grouped DataFrame for later concatenation
+        all_dfs.append((df_grouped, task_id, tunnel_name, use_dns_resolver, test_type, local))
+
+    # After processing all tasks, create the complete index based on the global max_time
+    complete_index = pd.MultiIndex.from_product(
+        [np.arange(0, global_max_time + 1), ['upload', 'download'], ['inner', 'outer']],
+        names=['frame.time_relative', 'traffic_type', 'interface']
     )
 
-    return fig
+    # Process all stored DataFrames and reindex them
+    final_dfs = []
+    for df_grouped, task_id, tunnel_name, use_dns_resolver, test_type, local in all_dfs:
+        df_grouped = df_grouped.set_index(['frame.time_relative', 'traffic_type', 'interface']).reindex(complete_index, fill_value=0).reset_index()
+
+        # Add interface, task_id, tunnel_name, and use_dns_resolver columns
+        df_grouped['task_id'] = task_id
+        df_grouped['tunnel_name'] = tunnel_name
+        df_grouped['use_dns_resolver'] = use_dns_resolver
+        df_grouped['test_type'] = test_type
+        df_grouped['local'] = local
+
+        final_dfs.append(df_grouped)
+
+    return pd.concat(final_dfs)
+
 
 def get_celery_tasks():
-    # Load JSON results from ../experiment/celery/results
     celery_task_results = []
     for child in Path('../experiment/celery/results').iterdir():
         if not child.is_file():
             continue
-
-        child: Path = child
-
         result = json.load(child.open())
-
         celery_task_results.append(result)
-
-    if len(celery_task_results) == 0:
-        print("No celery tasks found")
-
     return celery_task_results
 
-
-# Create initial figure with all selected traces
-def create_figure(visible_tasks=None):
-    if visible_tasks is None or len(visible_tasks) == 0:
-        return None
-
-    return plot_tasks(visible_tasks, all_dfs)
-
-
 celery_task_results = get_celery_tasks()
+all_dfs = process_all_dfs(celery_task_results)
 task_ids = [celery_task_result["task_id"] for celery_task_result in celery_task_results]
+tunnel_names = list(set([celery_task_result["result"]["tunnel"] for celery_task_result in celery_task_results]))
 
-all_dfs = process_all_dfs(task_ids)
 
-app = Dash(__name__)
-app.layout = html.Div(
-    [
-        dcc.Graph(id="graph"),
-        dcc.Dropdown(task_ids, id="task-id-selection", value=task_ids, multi=True),
+task_ids_select = pn.widgets.MultiSelect(
+    name='Task ID',
+    options=task_ids,
+    value=task_ids
+)
+tunnel_names_select = pn.widgets.MultiSelect(
+    name='Tunnel Name',
+    options=tunnel_names,
+    value=tunnel_names
+)
+interfaces_select = pn.widgets.MultiSelect(
+    name='Interface',
+    options=['outer', 'inner'],
+    value=['outer', 'inner']
+)
+traffic_types_select = pn.widgets.MultiSelect(
+    name='Trafic Type',
+    options=['upload', 'download'],
+    value=['upload', 'download']
+)
+test_types_select = pn.widgets.MultiSelect(
+    name='Test Type',
+    options=['upload', 'download', 'bidir'],
+    value=['upload', 'download', 'bidir']
+)
+local_select = pn.widgets.MultiSelect(
+    name='Local',
+    options=[True, False],
+    value=[True, False]
+)
+
+@pn.depends(task_ids_select.param.value, tunnel_names_select.param.value, test_types_select.param.value, traffic_types_select.param.value, interfaces_select.param.value, local_select.param.value)
+def plot(task_ids, tunnel_names, test_types, types, interfaces, local):
+    df_filtered = all_dfs[
+        all_dfs['task_id'].isin(task_ids) &
+        all_dfs['tunnel_name'].isin(tunnel_names) &
+        all_dfs['test_type'].isin(test_types) &
+        all_dfs['traffic_type'].isin(types) &
+        all_dfs['interface'].isin(interfaces) &
+        all_dfs['local'].isin(local)
     ]
-)
 
-# Dash callback to update the graph dynamically when tasks are selected
-@app.callback(
-    Output("graph", "figure"),
-    Input("task-id-selection", "value"),
-)
-def modify_legend(task_id_selection):
-    if task_id_selection is None or len(task_id_selection) == 0:
-        task_id_selection = task_ids
+    if df_filtered.empty:
+        # TODO: return a message instead of an empty plot
+        return
 
-    return create_figure(task_id_selection)
+    df_filtered = df_filtered.sort_values(by='frame.time_relative')
+
+    return df_filtered.plot.line(
+        x='frame.time_relative',
+        y='frame.len',
+        by=['tunnel_name', 'traffic_type', 'interface', 'task_id', 'test_type'],
+        ylabel='Sum of frame.len (Mbit)',
+        xlabel='Time (relative)',
+        responsive=True,
+        height=800,
+        legend='bottom',
+    )
+
+dashboard = pn.Column(
+    pn.Row(task_ids_select, tunnel_names_select, test_types_select, traffic_types_select, interfaces_select, local_select),
+    plot
+)
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    pn.serve(dashboard, start=True, port=5006)
+

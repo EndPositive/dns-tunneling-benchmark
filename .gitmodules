@@ -1,12 +1,15 @@
 [submodule "experiment/tunnels/tun/TUNS/tuns"]
 	path = experiment/tunnels/tun/TUNS/tuns
-	url = git@github.com:lnussbaum/tuns.git
-[submodule "experiment/tools/hev-socks5-server"]
-	path = experiment/tools/hev-socks5-server
-	url = git@github.com:heiher/hev-socks5-server.git
-[submodule "experiment/tools/hev-socks5-tunnel"]
-	path = experiment/tools/hev-socks5-tunnel
-	url = git@github.com:heiher/hev-socks5-tunnel.git
+	url = git@github.com:EndPositive/tuns.git
 [submodule "experiment/tunnels/socks/OzymanDNS/OzymanDNS"]
 	path = experiment/tunnels/socks/OzymanDNS/OzymanDNS
 	url = git@github.com:EndPositive/OzymanDNS.git
+[submodule "experiment/tunnels/socks/sods/sods"]
+	path = experiment/tunnels/socks/sods/sods
+	url = git@github.com:msantos/sods.git
+[submodule "experiment/tunnels/socks/dns-tunnler/dns-tunnler"]
+	path = experiment/tunnels/socks/dns-tunnler/dns-tunnler
+	url = git@github.com:calledit/dns-tunnler.git
+[submodule "experiment/tunnels/socks/dnstt-quic/dnstt"]
+	path = experiment/tunnels/socks/dnstt-quic/dnstt
+	url = git@github.com:EndPositive/dnstt.git

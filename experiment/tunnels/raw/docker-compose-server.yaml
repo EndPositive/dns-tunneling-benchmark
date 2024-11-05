@@ -7,6 +7,3 @@ services:
     networks:
       experiment:
         ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
-    expose:
-      - "1080/udp"
-      - "1080/tcp"

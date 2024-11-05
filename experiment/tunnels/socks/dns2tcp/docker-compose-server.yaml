@@ -5,7 +5,9 @@ services:
       dockerfile: Dockerfile
     image: dns2tcp
     container_name: dns-tunnel-server
-    command: dns2tcpd -F -d 1 -f /usr/src/app/.dns2tcpdrc
+    environment:
+      IPV4_ADDRESS_IPERF3_SERVER: ${IPV4_ADDRESS_IPERF3_SERVER}
+    command: sh -c "envsubst < .dns2tcpdrc.tmp > .dns2tcpdrc && dns2tcpd -F -d 1 -f /usr/src/app/.dns2tcpdrc"
     restart: unless-stopped
     networks:
       experiment:
@@ -13,3 +15,6 @@ services:
     expose:
       - "53/udp"
       - "53/tcp"
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"

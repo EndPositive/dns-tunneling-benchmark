@@ -13,6 +13,6 @@ services:
       - NET_ADMIN
     devices:
       - '/dev/net/tun:/dev/net/tun'
-    networks:
-      experiment:
-        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT}
+    network_mode: container:dummy-client
+    depends_on:
+      - dummy-client

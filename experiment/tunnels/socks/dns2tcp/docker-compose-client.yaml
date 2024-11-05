@@ -5,8 +5,10 @@ services:
       dockerfile: Dockerfile
     image: dns2tcp
     container_name: dns-tunnel-client
-    command: dns2tcpc -r socks -l 1080 -k key -z test.com ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT_TARGET_RESOLVER}
+    environment:
+      IPV4_ADDRESS_IPERF3_SERVER: ${IPV4_ADDRESS_IPERF3_SERVER}
+    command: sh -c "envsubst < .dns2tcpdrc.tmp > .dns2tcpdrc && dns2tcpc -r socks -l 5201 -k key -z test.com ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT_TARGET_RESOLVER}"
     restart: unless-stopped
-    networks:
-      experiment:
-        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT}
+    network_mode: container:dummy-client
+    depends_on:
+      - dummy-client

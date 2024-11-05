@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     image: dnstt
     container_name: dns-tunnel-server
-    command: dnstt-server -udp :53 -privkey-file server.key test.com 127.0.0.1:1080
+    command: dnstt-server -udp :53 -privkey-file server.key test.com ${IPV4_ADDRESS_IPERF3_SERVER}:5201
     restart: unless-stopped
     stop_grace_period: 1s
     networks:
@@ -14,3 +14,6 @@ services:
     expose:
       - "53/udp"
       - "53/tcp"
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"

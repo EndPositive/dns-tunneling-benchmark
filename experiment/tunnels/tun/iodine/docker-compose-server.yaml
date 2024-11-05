@@ -21,3 +21,6 @@ services:
     expose:
       - "53/udp"
       - "53/tcp"
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"

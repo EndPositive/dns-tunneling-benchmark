@@ -1,11 +1,11 @@
 services:
   dns-tunnel-server:
     build:
-      context: tunnels/socks/OzymanDNS/OzymanDNS
+      context: tunnels/socks/dnstt-quic
       dockerfile: Dockerfile
-    image: ozymandns
+    image: dnstt-quic
     container_name: dns-tunnel-server
-    command: ./nomde.pl -i 0.0.0.0 test.com -L sshdns:${IPV4_ADDRESS_IPERF3_SERVER}:5201
+    command: dnstt-server -udp :53 test.com ${IPV4_ADDRESS_IPERF3_SERVER}:5201
     restart: unless-stopped
     stop_grace_period: 1s
     networks:

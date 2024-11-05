@@ -1,11 +1,13 @@
 services:
   dns-tunnel-server:
     build:
-      context: tunnels/socks/OzymanDNS/OzymanDNS
+      context: tunnels/socks/dnscapy
       dockerfile: Dockerfile
-    image: ozymandns
+    image: dnscapy
     container_name: dns-tunnel-server
-    command: ./nomde.pl -i 0.0.0.0 test.com -L sshdns:${IPV4_ADDRESS_IPERF3_SERVER}:5201
+    # fake port 53 open
+    # forward 127.0.0.1:5201 to IPERF3 server
+    command: sh -c "socat -dddd UDP-LISTEN:53 /dev/null & socat -dddd TCP-LISTEN:5201,fork TCP:${IPV4_ADDRESS_IPERF3_SERVER}:5201 & sleep 1 & ./dnscapy_server.py -d 5 -p 5201 test.com ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}"
     restart: unless-stopped
     stop_grace_period: 1s
     networks:

@@ -1,13 +1,16 @@
 name: benchmark
 services:
-  iperf3-client:
+  dumpcap-client:
     build:
-      context: tools/iperf3
-    container_name: iperf3-client
-    image: iperf3
+      context: tools/dumpcap
+    container_name: dumpcap-client
+    image: dumpcap
     restart: unless-stopped
     command: sleep infinity
     network_mode: container:dummy-client
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     volumes:
       - ./celery/artifacts:/celery/artifacts
     user: "1000:1001"
