@@ -1,0 +1,13 @@
+services:
+  dns-tunnel-client:
+    build:
+      context: tunnels/tcp/slipstream/slipstream
+      dockerfile: Dockerfile
+    image: slipstream
+    container_name: dns-tunnel-client
+    entrypoint: ""
+    command: sh -c "echo '${IPV4_ADDRESS_DNS_RESOLVER} 53' > resolvers-trusted.txt && /usr/src/app/slipstream client 5201 resolvers-trusted.txt test.com bbr"
+    restart: unless-stopped
+    network_mode: container:dummy-client
+    depends_on:
+      - dummy-client

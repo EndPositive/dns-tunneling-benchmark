@@ -1,16 +1,13 @@
 services:
   dns-tunnel-client:
     build:
-      context: tunnels/tun/iodine
+      context: tunnels/fd/sods
       dockerfile: Dockerfile
-    image: iodine
+    image: sods
     container_name: dns-tunnel-client
-    command: iodine -f ${IPV4_ADDRESS_DNS_RESOLVER} test.com
+    # use socat instead of sdt -p to enable multiplexing (fork)
+    command: socat TCP-LISTEN:5201,fork EXEC:"sdt -r ${IPV4_ADDRESS_DNS_RESOLVER} sshdns.test.com"
     restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - '/dev/net/tun:/dev/net/tun'
     network_mode: container:dummy-client
     depends_on:
       - dummy-client

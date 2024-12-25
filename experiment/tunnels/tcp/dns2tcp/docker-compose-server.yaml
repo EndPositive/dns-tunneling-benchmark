@@ -1,0 +1,14 @@
+services:
+  dns-tunnel-server:
+    build:
+      context: tunnels/tcp/dns2tcp
+      dockerfile: Dockerfile
+    image: dns2tcp
+    container_name: dns-tunnel-server
+    environment:
+      IPV4_ADDRESS_IPERF3_SERVER: ${IPV4_ADDRESS_IPERF3_SERVER}
+    command: sh -c "envsubst < .dns2tcpdrc.tmp > .dns2tcpdrc && dns2tcpd -F -d 1 -f /usr/src/app/.dns2tcpdrc"
+    restart: unless-stopped
+    network_mode: container:dummy-server
+    depends_on:
+      - dummy-server

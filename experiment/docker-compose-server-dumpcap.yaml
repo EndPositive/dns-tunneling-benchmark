@@ -1,16 +1,16 @@
 name: benchmark
 services:
-  dumpcap-client:
+  dumpcap-server:
     build:
       context: tools/dumpcap
-    container_name: dumpcap-client
+    container_name: dumpcap-server
     image: dumpcap
     pull_policy: never
     restart: unless-stopped
     command: sleep infinity
-    network_mode: container:dummy-client
+    network_mode: container:dummy-server
     cap_add:
       - NET_ADMIN
       - NET_RAW
     depends_on:
-      - dummy-client
+      - dummy-server

@@ -14,15 +14,8 @@ os.makedirs(artifact_dir, exist_ok=True)
 
 app = Celery(
     "experiment",
-    broker_url='filesystem://localhost',
-    broker_transport_options={
-        'data_folder_in': './celery/data/broker',
-        'data_folder_out': './celery/data/broker/',
-    },
-    result_backend='file://./celery/results',
-    task_serializer = 'json',
-    persist_results = True,
-    result_serializer = 'json',
-    accept_content = ['json'],
-    imports=("tasks",),
+    broker="redis://127.0.0.1:6379/0",
+    backend='db+postgresql://username:password@127.0.0.1:5432/postgres',
+    imports=("src.tasks.build","src.tasks.destroy","src.tasks.run",),
+    task_track_started=True,
 )

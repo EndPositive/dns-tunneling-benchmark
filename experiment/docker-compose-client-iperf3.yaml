@@ -5,6 +5,7 @@ services:
       context: tools/iperf3
     container_name: iperf3-client
     image: iperf3
+    pull_policy: never
     restart: unless-stopped
     command: sleep infinity
     network_mode: container:dummy-client

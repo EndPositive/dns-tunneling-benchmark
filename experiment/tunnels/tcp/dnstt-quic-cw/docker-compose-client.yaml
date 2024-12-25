@@ -1,16 +1,12 @@
 services:
   dns-tunnel-client:
     build:
-      context: tunnels/tun/iodine
+      context: tunnels/tcp/dnstt-quic-cw
       dockerfile: Dockerfile
-    image: iodine
+    image: dnstt-quic-cw
     container_name: dns-tunnel-client
-    command: iodine -f ${IPV4_ADDRESS_DNS_RESOLVER} test.com
+    command: dnstt-client -udp ${IPV4_ADDRESS_DNS_RESOLVER}:53 test.com 127.0.0.1:5201
     restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - '/dev/net/tun:/dev/net/tun'
     network_mode: container:dummy-client
     depends_on:
       - dummy-client

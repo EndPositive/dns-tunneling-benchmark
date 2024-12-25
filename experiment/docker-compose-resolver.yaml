@@ -1,21 +1,18 @@
 name: benchmark
 services:
   dns-resolver:
-    build:
-      context: tools/coredns
-      dockerfile: Dockerfile
-    container_name: dns-resolver
     pull_policy: never
-    image: dns-resolver
-    environment:
-      IPV4_ADDRESS_DNS_TUNNEL_SERVER: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
-    command: sh -c "envsubst < Corefile.tmp > Corefile && coredns"
-    restart: unless-stopped
+    image: klutchell/unbound:1.22.0
+    restart: no # netem disappears after restart
+    ports:
+      - "8953:8953/tcp"
     networks:
-      experiment:
-        ipv4_address: ${IPV4_ADDRESS_DNS_RESOLVER}
+      experiment: {}
+    deploy:
+      mode: replicated
+      replicas: ${DNS_RESOLVER_REPLICAS:-0}
     volumes:
-      - ./tools/coredns/Corefile:/Corefile
+      - ./tools/unbound/unbound.conf:/etc/unbound/custom.conf.d/unbound.conf
     expose:
       - "53/udp"
       - "53/tcp"

@@ -1,0 +1,13 @@
+services:
+  dns-tunnel-server:
+    build:
+      context: tunnels/fd/OzymanDNS/OzymanDNS
+      dockerfile: Dockerfile
+    image: ozymandns
+    container_name: dns-tunnel-server
+    command: ./nomde.pl -i 0.0.0.0 test.com -L sshdns:${IPV4_ADDRESS_IPERF3_SERVER}:5201
+    restart: unless-stopped
+    stop_grace_period: 1s
+    network_mode: container:dummy-server
+    depends_on:
+      - dummy-server

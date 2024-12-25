@@ -1,0 +1,13 @@
+services:
+  dns-tunnel-server:
+    build:
+      context: tunnels/tcp/slipstream/slipstream
+      dockerfile: Dockerfile
+    image: slipstream
+    container_name: dns-tunnel-server
+    command: server 53 certs/cert.pem certs/key.pem ${IPV4_ADDRESS_IPERF3_SERVER} 5201 test.com bbr
+    restart: unless-stopped
+    stop_grace_period: 1s
+    network_mode: container:dummy-server
+    depends_on:
+      - dummy-server

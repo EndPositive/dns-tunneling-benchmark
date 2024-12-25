@@ -1,0 +1,13 @@
+services:
+  dns-tunnel-server:
+    build:
+      context: tunnels/fd/dns-tunnler
+      dockerfile: Dockerfile
+    image: dns-tunnler
+    container_name: dns-tunnel-server
+    command: sh -c "socat TCP-LISTEN:22,fork TCP:${IPV4_ADDRESS_IPERF3_SERVER}:5201 & node dnsProxyServer.js -d test.com -p 53 -v"
+    restart: unless-stopped
+    stop_grace_period: 1s
+    network_mode: container:dummy-server
+    depends_on:
+      - dummy-server

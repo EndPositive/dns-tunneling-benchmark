@@ -7,7 +7,7 @@ services:
     container_name: dns-tunnel-client
     command: sh -x -c "
       sleep 1 &&
-      ruby tuns-client --debug -i 10.0.0.2 -t 10.0.0.1 -n ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT_TARGET_RESOLVER} -d test.com"
+      ruby tuns-client -i 10.0.0.2 -t 10.0.0.1 -n ${IPV4_ADDRESS_DNS_RESOLVER} -d test.com"
     restart: unless-stopped
     cap_add:
       - NET_ADMIN

@@ -10,7 +10,7 @@ services:
     networks:
       experiment:
         ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_CLIENT}
-    sysctls:
-      net.ipv4.tcp_rmem: 4096 4096 4096
-      net.ipv4.tcp_wmem: 4096 4096 4096
-      net.ipv4.tcp_window_scaling: 0
+#    sysctls:
+#      net.ipv4.tcp_rmem: 4096 4096 4096
+#      net.ipv4.tcp_wmem: 4096 4096 4096
+#      net.ipv4.tcp_window_scaling: 0

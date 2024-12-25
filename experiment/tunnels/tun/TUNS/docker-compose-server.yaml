@@ -9,18 +9,12 @@ services:
       iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE &&
       iptables -A FORWARD -i eth0 -o tun0 -m state --state RELATED,ESTABLISHED -j ACCEPT &&
       iptables -A FORWARD -i tun0 -o eth0 -j ACCEPT &&
-      ruby tuns-server --debug -i 10.0.0.1 -t 10.0.0.2 -d test.com"
+      ruby tuns-server -i 10.0.0.1 -t 10.0.0.2 -d test.com"
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
     devices:
       - '/dev/net/tun:/dev/net/tun'
-    networks:
-      experiment:
-        ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
-    expose:
-      - "53/udp"
-      - "53/tcp"
-    ports:
-      - "53:53/udp"
-      - "53:53/tcp"
+    network_mode: container:dummy-server
+    depends_on:
+      - dummy-server
