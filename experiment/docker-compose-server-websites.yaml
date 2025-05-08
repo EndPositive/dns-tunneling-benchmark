@@ -1,0 +1,16 @@
+name: benchmark
+services:
+  websites-server:
+    build:
+      context: tools/websites
+    container_name: websites-server
+    image: websites:latest
+    pull_policy: missing
+    restart: unless-stopped
+    command: "python -m http.server --bind 0.0.0.0 5201"
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_WEBSITES_SERVER}
+    expose:
+      - "5201/udp"
+      - "5201/tcp"

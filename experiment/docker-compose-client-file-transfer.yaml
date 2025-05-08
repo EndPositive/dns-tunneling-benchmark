@@ -1,0 +1,14 @@
+name: benchmark
+services:
+  file-transfer-client:
+    build:
+      context: tools/file-transfer
+    container_name: file-transfer-client
+    image: file-transfer
+    pull_policy: never
+    restart: unless-stopped
+    command: sleep infinity
+    cpuset: "0,2,4,6,8,10"
+    network_mode: container:dummy-client
+    depends_on:
+      - dummy-client

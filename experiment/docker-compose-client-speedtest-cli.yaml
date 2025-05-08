@@ -1,0 +1,15 @@
+name: benchmark
+services:
+  speedtest-cli:
+    build:
+      context: tools/speedtest-cli
+      dockerfile: dockerfile
+    container_name: speedtest-cli
+    image: speedtest-cli
+    pull_policy: never
+    restart: unless-stopped
+    command: sleep infinity
+    cpuset: "0,2,4,6,8,10"
+    network_mode: container:dummy-client
+    depends_on:
+      - dummy-client

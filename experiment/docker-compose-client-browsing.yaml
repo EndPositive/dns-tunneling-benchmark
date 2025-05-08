@@ -1,0 +1,17 @@
+name: benchmark
+services:
+  browsing-client:
+    build:
+      context: tools/browsing
+    container_name: browsing-client
+    image: browsing-client
+    pull_policy: never
+    restart: unless-stopped
+    command: sleep infinity
+    entrypoint: ""
+    cpuset: "0,2,4,6,8,10"
+    environment:
+      BASE_URL: http://127.0.0.1:5201
+    network_mode: container:dummy-client
+    depends_on:
+      - dummy-client

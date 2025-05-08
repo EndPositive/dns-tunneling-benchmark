@@ -7,12 +7,14 @@ services:
     image: dummy
     restart: no
     command: sleep infinity
+    cpuset: "0,2,4,6,8,10"
     networks:
       experiment:
         ipv4_address: ${IPV4_ADDRESS_DNS_TUNNEL_SERVER}
     expose:
       - "53/udp"
       - "53/tcp"
-    ports:
-      - "53/udp"
-      - "53/tcp"
+#    sysctls:
+#      net.ipv4.tcp_rmem: 4096 4096 4096
+#      net.ipv4.tcp_wmem: 4096 4096 4096
+#      net.ipv4.tcp_window_scaling: 0

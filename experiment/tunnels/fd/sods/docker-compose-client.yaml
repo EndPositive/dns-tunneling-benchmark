@@ -7,6 +7,7 @@ services:
     container_name: dns-tunnel-client
     # use socat instead of sdt -p to enable multiplexing (fork)
     command: socat TCP-LISTEN:5201,fork EXEC:"sdt -r ${IPV4_ADDRESS_DNS_RESOLVER} sshdns.test.com"
+    cpuset: "0,2,4,6,8,10"
     restart: unless-stopped
     network_mode: container:dummy-client
     depends_on:

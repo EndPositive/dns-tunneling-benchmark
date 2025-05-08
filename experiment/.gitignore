@@ -13,7 +13,10 @@ control/*
 !celery/results/
 !celery/results/*.json
 !celery/artifacts/
-!celery/artifacts/*.csv
 !celery/artifacts/*.json
 
 **/__pycache__/
+
+
+postgres/
+qlog/

@@ -5,7 +5,8 @@ services:
       dockerfile: Dockerfile
     image: iodine
     container_name: dns-tunnel-client
-    command: iodine -f ${IPV4_ADDRESS_DNS_RESOLVER} test.com
+    command: iodine -f -r ${IPV4_ADDRESS_DNS_RESOLVER} test.com
+    cpuset: "0,2,4,6,8,10"
     restart: unless-stopped
     cap_add:
       - NET_ADMIN

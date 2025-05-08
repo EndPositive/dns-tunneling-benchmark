@@ -5,7 +5,8 @@ services:
       dockerfile: Dockerfile
     image: dnstt
     container_name: dns-tunnel-client
-    command: dnstt-client -udp ${IPV4_ADDRESS_DNS_RESOLVER}:53 -pubkey-file server.pub test.com ${IPV4_ADDRESS_IPERF3_SERVER}:5201
+    command: dnstt-client -udp ${IPV4_ADDRESS_DNS_RESOLVER}:53 -pubkey-file server.pub test.com 0.0.0.0:5201
+    cpuset: "0,2,4,6,8,10"
     restart: unless-stopped
     network_mode: container:dummy-client
     depends_on:

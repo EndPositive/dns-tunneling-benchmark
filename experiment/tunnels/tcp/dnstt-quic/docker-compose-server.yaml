@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     image: dnstt-quic-cw
     container_name: dns-tunnel-server
-    command: dnstt-server -udp :53 test.com ${IPV4_ADDRESS_IPERF3_SERVER}:5201
+    command: dnstt-server -udp :53 test.com ${IPV4_ADDRESS_DNS_TUNNEL_TARGET}:5201
     restart: unless-stopped
     stop_grace_period: 1s
     network_mode: container:dummy-server

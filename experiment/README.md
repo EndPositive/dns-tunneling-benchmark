@@ -22,13 +22,9 @@ First, you need to know the virtual interface name of the container.
 We can use the following script to retrieve this.
 
 ```bash
-sudo sh tools/dockerveth/dockerveth.sh
-CONTAINER ID    VETH            NAMES
-05b9d2602aae    veth66a9291     socks-client
-9d7d74350889    vethefabfab     dns-tunnel-client
-89e7a303e18e    vethe819321     dns-tunnel-server
-eb939b84f5cd    veth73c5679     big-files
-c08f52791c21    veth1b6fb8a     socks-server
+sudo sh tools/docker-veth/docker-veth.sh 
+veth28ff3c8@if2 3a139628b3cc dummy-server
+vethf4ef9dc@if2 71cf6d6b201c dummy-client
 ```
 
 Then it is possible to add network emulation to the virtual interface.

@@ -1,0 +1,17 @@
+name: benchmark
+services:
+  file-transfer-server:
+    build:
+      context: tools/file-transfer
+    container_name: file-transfer-server
+    image: file-transfer
+    pull_policy: never
+    restart: unless-stopped
+    command: sleep infinity
+    cpuset: "0,2,4,6,8,10"
+    networks:
+      experiment:
+        ipv4_address: ${IPV4_ADDRESS_NC_SERVER}
+    expose:
+      - "5201/udp"
+      - "5201/tcp"

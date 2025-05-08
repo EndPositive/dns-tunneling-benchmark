@@ -9,7 +9,3 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_USER=username
       - POSTGRES_DB=db
-  redis:
-    image: redis:7
-    ports:
-      - "6379:6379"

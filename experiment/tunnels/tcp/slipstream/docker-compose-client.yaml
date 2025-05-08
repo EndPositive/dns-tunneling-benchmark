@@ -6,7 +6,8 @@ services:
     image: slipstream
     container_name: dns-tunnel-client
     entrypoint: ""
-    command: sh -c "echo '${IPV4_ADDRESS_DNS_RESOLVER} 53' > resolvers-trusted.txt && /usr/src/app/slipstream client 5201 resolvers-trusted.txt test.com bbr"
+    command: sh -c "echo '${IPV4_ADDRESS_DNS_RESOLVERS_SLIPSTREAM}' > resolvers-trusted.txt && /usr/src/app/slipstream client 5201 resolvers-trusted.txt test.com dcubic false"
+    cpuset: "0,2,4,6,8,10"
     restart: unless-stopped
     network_mode: container:dummy-client
     depends_on:

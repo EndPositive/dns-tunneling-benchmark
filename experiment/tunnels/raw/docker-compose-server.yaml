@@ -4,6 +4,7 @@ services:
     container_name: dns-tunnel-server
     command: sleep infinity
     restart: unless-stopped
+    cpuset: "0,2,4,6,8,10"
     network_mode: container:dummy-server
     depends_on:
       - dummy-server

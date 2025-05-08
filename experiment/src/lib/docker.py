@@ -36,15 +36,22 @@ def new_docker_controller(env: Env, tunnel: Tunnel, client_host: str = None,
         ]
 
         if client:
+            compose_files.append("docker-compose-client-browsing.yaml")
             compose_files.append("docker-compose-client-dummy.yaml")
             compose_files.append("docker-compose-client-dumpcap.yaml")
+            compose_files.append("docker-compose-client-file-transfer.yaml")
             compose_files.append("docker-compose-client-iperf3.yaml")
+            compose_files.append("docker-compose-client-speedtest-cli.yaml")
             compose_files.append(f"tunnels/{tunnel.value}/docker-compose-client.yaml")
 
         if server:
             compose_files.append("docker-compose-server-dummy.yaml")
             compose_files.append("docker-compose-server-dumpcap.yaml")
+            compose_files.append("docker-compose-server-file-transfer.yaml")
             compose_files.append("docker-compose-server-iperf3.yaml")
+            compose_files.append("docker-compose-server-iperf3-dumpcap.yaml")
+            compose_files.append("docker-compose-server-speedtest-server.yaml")
+            compose_files.append("docker-compose-server-websites.yaml")
             compose_files.append(f"tunnels/{tunnel.value}/docker-compose-server.yaml")
 
         return DockerClient(

@@ -8,6 +8,7 @@ services:
     pull_policy: never
     restart: unless-stopped
     command: sleep infinity
+    cpuset: "0,2,4,6,8,10"
     network_mode: container:dummy-server
     cap_add:
       - NET_ADMIN

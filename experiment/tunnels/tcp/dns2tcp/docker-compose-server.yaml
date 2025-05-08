@@ -6,8 +6,9 @@ services:
     image: dns2tcp
     container_name: dns-tunnel-server
     environment:
-      IPV4_ADDRESS_IPERF3_SERVER: ${IPV4_ADDRESS_IPERF3_SERVER}
-    command: sh -c "envsubst < .dns2tcpdrc.tmp > .dns2tcpdrc && dns2tcpd -F -d 1 -f /usr/src/app/.dns2tcpdrc"
+      IPV4_ADDRESS_DNS_TUNNEL_TARGET: ${IPV4_ADDRESS_DNS_TUNNEL_TARGET}
+    command: sh -c "envsubst < .dns2tcpdrc.tmp > .dns2tcpdrc && dns2tcpd -F -d 3 -f /usr/src/app/.dns2tcpdrc"
+    cpuset: "0,2,4,6,8,10"
     restart: unless-stopped
     network_mode: container:dummy-server
     depends_on:

@@ -1,5 +1,0 @@
-pandas[performance]==2.2.3
-holoviews==1.19.1
-panel==1.5.2
-bokeh==3.6.0
-hvplot==0.11.0

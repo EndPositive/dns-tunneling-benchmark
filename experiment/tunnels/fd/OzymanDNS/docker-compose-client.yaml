@@ -6,6 +6,7 @@ services:
     image: ozymandns
     container_name: dns-tunnel-client
     command: socat TCP-LISTEN:5201,fork EXEC:"./droute.pl -r ${IPV4_ADDRESS_DNS_RESOLVER} sshdns.test.com"
+    cpuset: "0,2,4,6,8,10"
     sysctls:
       net.ipv4.tcp_rmem: 4096 4096 4096
       net.ipv4.tcp_wmem: 4096 4096 4096

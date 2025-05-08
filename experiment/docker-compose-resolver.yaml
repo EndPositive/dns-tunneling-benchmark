@@ -5,9 +5,10 @@ services:
     image: klutchell/unbound:1.22.0
     restart: no # netem disappears after restart
     ports:
-      - "8953:8953/tcp"
+      - "8953/tcp"
     networks:
       experiment: {}
+    cpuset: "0,2,4,6,8,10"
     deploy:
       mode: replicated
       replicas: ${DNS_RESOLVER_REPLICAS:-0}

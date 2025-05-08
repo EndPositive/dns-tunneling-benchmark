@@ -10,12 +10,15 @@
 [submodule "experiment/tunnels/socks/dns-tunnler/dns-tunnler"]
 	path = experiment/tunnels/fd/dns-tunnler/dns-tunnler
 	url = git@github.com:calledit/dns-tunnler.git
-[submodule "experiment/tunnels/socks/dnstt-quic-connid/dnstt"]
-	path = experiment/tunnels/tcp/dnstt-quic-cw/dnstt
-	url = git@github.com:EndPositive/dnstt.git
 [submodule "experiment/tunnels/tcp/slipstream/slipstream"]
 	path = experiment/tunnels/tcp/slipstream/slipstream
 	url = git@github.com:EndPositive/slipstream.git
 [submodule "superset/superset"]
 	path = superset/superset
 	url = git@github.com:apache/superset.git
+[submodule "experiment/tools/speedtest-cli"]
+	path = experiment/tools/speedtest-cli
+	url = git@github.com:EndPositive/speedtest-cli.git
+[submodule "experiment/tools/docker-veth"]
+	path = experiment/tools/docker-veth
+	url = git@github.com:samos123/docker-veth.git

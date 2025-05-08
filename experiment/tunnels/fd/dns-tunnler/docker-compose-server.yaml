@@ -5,7 +5,8 @@ services:
       dockerfile: Dockerfile
     image: dns-tunnler
     container_name: dns-tunnel-server
-    command: sh -c "socat TCP-LISTEN:22,fork TCP:${IPV4_ADDRESS_IPERF3_SERVER}:5201 & node dnsProxyServer.js -d test.com -p 53 -v"
+    command: sh -c "node dnsProxyServer.js --dnsname test.com --port 53 --targetip ${IPV4_ADDRESS_DNS_TUNNEL_TARGET} --targetport 5201 --verbose"
+    cpuset: "0,2,4,6,8,10"
     restart: unless-stopped
     stop_grace_period: 1s
     network_mode: container:dummy-server

@@ -9,7 +9,8 @@ services:
       iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE &&
       iptables -A FORWARD -i eth0 -o dns0 -m state --state RELATED,ESTABLISHED -j ACCEPT &&
       iptables -A FORWARD -i dns0 -o eth0 -j ACCEPT &&
-      iodined -f -n ${IPV4_ADDRESS_DNS_TUNNEL_SERVER} -c 10.0.0.1 test.com"
+      iodined -f -n ${IPV4_ADDRESS_DNS_TUNNEL_SERVER} -c -DD 10.0.0.1 test.com"
+    cpuset: "0,2,4,6,8,10"
     restart: unless-stopped
     cap_add:
       - NET_ADMIN

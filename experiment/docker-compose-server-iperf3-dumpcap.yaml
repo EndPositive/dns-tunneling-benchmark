@@ -1,0 +1,17 @@
+name: benchmark
+services:
+  iperf3-dumpcap-server:
+    build:
+      context: tools/dumpcap
+    container_name: iperf3-dumpcap-server
+    image: dumpcap
+    pull_policy: never
+    restart: unless-stopped
+    command: sleep infinity
+    cpuset: "0,2,4,6,8,10"
+    network_mode: container:iperf3-server
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
+      - iperf3-server
